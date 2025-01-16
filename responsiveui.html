@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive UI</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f8f9fa;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 600px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    .toggle-slider {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      background: #f1f3f5;
+      border-radius: 25px;
+      padding: 5px;
+    }
+
+    .toggle-slider label {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      color: #495057;
+      border-radius: 25px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .toggle-slider input[type="radio"] {
+      display: none;
+    }
+
+    .toggle-slider input[type="radio"]:checked + label {
+      background: #0d6efd;
+      color: #fff;
+    }
+
+    #dateDropdown {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      font-size: 16px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      background: #fff;
+      font-weight: bold; 
+    }
+
+    #cardsContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #6c757d;
+      font-size: 16px;
+      padding: 20px;
+    }
+
+    .strategy-count {
+      margin-left: 10px;
+      color: #6c757d; 
+
+    .bullet {
+      margin-right: 5px;
+    }
+
+    .strategy-name {
+      font-weight: bold; 
+      color: #000; 
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="toggle-slider">
+      <input type="radio" id="bullish" name="view" value="Bullish" checked>
+      <label for="bullish">Bullish</label>
+
+      <input type="radio" id="bearish" name="view" value="Bearish">
+      <label for="bearish">Bearish</label>
+
+      <input type="radio" id="rangebound" name="view" value="RangeBound">
+      <label for="rangebound">RangeBound</label>
+
+      <input type="radio" id="volatile" name="view" value="Volatile">
+      <label for="volatile">Volatile</label>
+    </div>
+
+    <select id="dateDropdown"></select>
+    <div id="cardsContainer"></div>
+  </div>
+
+  <script>
+    const dateArray = ['24 Apr 2024', '02 May 2024', '09 May 2024', '31 May 2024', '21 Jun 2024'];
+    const strategyArray = [
+      { View: 'Bullish', Value: { '24 Apr 2024': ['Bull Call Spread','Bull Put Spread','Bull Put Spread','Long Call','Bull Put Spread','Bull Call Spread','Strategy1','Bull Call Spread','Strategy1','Strategy1','SpreadStrategy','Bull Call Spread'], '02 May 2024': ['Bull Call Spread','Bull Call Spread','Bull Put Spread','Long Call','Long Call','Long Call','Bull Put Spread','Bull Call Spread','Strategy1','Bull Call Spread','Strategy2','Strategy1','Strategy2','Bull Call Spread'], '09 May 2024':  ['Strategy Put','Strategy Call','Strategy Call','Strategy Call','Strategy Put'] } },
+      { View: 'Bearish', Value: { '24 Apr 2024': ['Bear Call Spread','Bear Call Spread','Bear Call Spread','Long Put','Long Put','Long Put','Bear Call Spread'], '31 May 2024': ['Long Put','Long Put','Long Put','Long Put','Long Put'], '21 Jun 2024': ['Strategy3','Strategy3','Bear Put Spread','Strategy3','Long Put','Long Put'] } },
+      { View: 'RangeBound', Value: { '24 Apr 2024': ['Short Straddle','Short Strangle','Short Strangle','Iron Butterfly','Short Strangle','Short Straddle','Strategy1','Short Straddle','Strategy1','Strategy1','SpreadStrategy','Short Straddle'], '02 May 2024': ['Short Straddle','Short Straddle','Short Strangle','Iron Butterfly','Iron Butterfly','Iron Butterfly','Short Strangle','Short Straddle','Strategy1','Short Straddle','Strategy2','Strategy1','Strategy2','Short Straddle'] , '21 Jun 2024': ['Iron Condor','Iron Butterfly','Iron Butterfly','Iron Butterfly','Iron Condor']} },
+      { View: 'Volatile', Value: { '02 May 2024': ['Long Straddle','Long Strangle','Long Strangle','Long Strangle','Long Straddle','Strategy1','Long Straddle','Strategy1','Strategy1','Spread-Strategy','Long Straddle'], '09 May 2024': ['Long Straddle','Long Straddle','Long Strangle','Long Strangle','Long Straddle','Strategy1','Long Straddle','Strategy2','Strategy1','Strategy2','Long Straddle'], '31 May 2024': ['Long Straddle','Long Strangle','Long Strangle','Long Strangle','Long Straddle'] } },
+    ];
+
+    const dateDropdown = document.getElementById('dateDropdown');
+    const cardsContainer = document.getElementById('cardsContainer');
+
+    dateArray.forEach(date => {
+      const option = document.createElement('option');
+      option.value = date;
+      option.textContent = date;
+      option.style.fontWeight = 'bold'; 
+      dateDropdown.appendChild(option);
+    });
+
+    let selectedView = 'Bullish';
+    let selectedDate = dateArray[0];
+
+    document.querySelectorAll('[name="view"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        selectedView = e.target.value;
+        renderCards();
+      });
+    });
+
+    dateDropdown.addEventListener('change', (e) => {
+      selectedDate = e.target.value;
+      renderCards();
+    });
+
+    function renderCards() {
+      cardsContainer.innerHTML = '';
+      const viewData = strategyArray.find(item => item.View === selectedView)?.Value || {};
+
+      const allStrategies = Object.entries(viewData).reduce((acc, [date, Strategies]) => {
+        if (date === selectedDate) {
+            Strategies.forEach(strategy => {
+            acc[strategy] = (acc[strategy] || 0) + 1;
+          });
+        }
+        return acc;
+      }, {});
+
+      if (Object.keys(allStrategies).length === 0) {
+        cardsContainer.innerHTML = `<div class="empty-state">There are no strategies for <br><b>${selectedDate}</b></div>`;
+        return;
+      }
+
+      Object.entries(allStrategies).forEach(([name, count]) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        const strategyText = count === 1 ? '• 1 Strategy' : `• ${count} Strategies`;
+        card.innerHTML = `<span class="strategy-name">${name}</span><span class="strategy-count">${strategyText}</span>`;
+        cardsContainer.appendChild(card);
+      });
+    }
+    renderCards();
+  </script>
+</body>
+</html>
